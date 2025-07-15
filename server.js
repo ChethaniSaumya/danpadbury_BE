@@ -1075,6 +1075,124 @@ async function getWalletAddressesFromTransaction(txnId) {
   }
 }
 
+// Add this new endpoint to your Express app for debugging
+
+app.get('/api/debug/time-check', (req, res) => {
+  const currentTime = Math.floor(Date.now() / 1000);
+  const currentTier = getCurrentTier();
+  
+  // Get detailed info about all tiers
+  const tierDetails = PRICING_TIERS.map(tier => {
+    const isActive = currentTime >= tier.startDate && currentTime < tier.endDate;
+    const timeUntilStart = tier.startDate - currentTime;
+    const timeUntilEnd = tier.endDate - currentTime;
+    
+    return {
+      name: tier.name,
+      startDate: tier.startDate,
+      endDate: tier.endDate,
+      startDateISO: new Date(tier.startDate * 1000).toISOString(),
+      endDateISO: new Date(tier.endDate * 1000).toISOString(),
+      isActive,
+      timeUntilStart: timeUntilStart > 0 ? timeUntilStart : null,
+      timeUntilEnd: timeUntilEnd > 0 ? timeUntilEnd : null,
+      status: isActive ? 'ACTIVE' : (timeUntilStart > 0 ? 'UPCOMING' : 'ENDED')
+    };
+  });
+  
+  res.json({
+    success: true,
+    serverTime: {
+      unix: currentTime,
+      iso: new Date(currentTime * 1000).toISOString(),
+      utc: new Date().toUTCString(),
+      local: new Date().toString()
+    },
+    activeTier: currentTier ? currentTier.name : null,
+    allTiers: tierDetails,
+    nextTier: tierDetails.find(t => t.timeUntilStart > 0),
+    debug: {
+      message: "Compare your device time with serverTime.iso",
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    }
+  });
+});
+
+// Replace your existing /api/current-tier endpoint with this enhanced version
+
+app.get('/api/current-tier', async (req, res) => {
+  try {
+    const currentTime = Math.floor(Date.now() / 1000);
+    const currentTier = getCurrentTier();
+
+    // Add cache-busting headers
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    if (!currentTier) {
+      // Find the next upcoming tier
+      const nextTier = PRICING_TIERS.find(tier => tier.startDate > currentTime);
+      
+      return res.json({
+        success: true,
+        activeTier: null,
+        message: 'No active tier currently',
+        serverTime: {
+          unix: currentTime,
+          iso: new Date(currentTime * 1000).toISOString()
+        },
+        nextTier: nextTier ? {
+          name: nextTier.name,
+          startsIn: nextTier.startDate - currentTime,
+          startTime: new Date(nextTier.startDate * 1000).toISOString()
+        } : null,
+        debug: {
+          allTiersStatus: PRICING_TIERS.map(tier => ({
+            name: tier.name,
+            active: currentTime >= tier.startDate && currentTime < tier.endDate,
+            startTime: new Date(tier.startDate * 1000).toISOString(),
+            endTime: new Date(tier.endDate * 1000).toISOString()
+          }))
+        }
+      });
+    }
+
+    const tierMintedCount = await getTierMintedCount(currentTier.name);
+    const isSoldOut = tierMintedCount >= currentTier.maxSupply;
+
+    res.json({
+      success: true,
+      activeTier: {
+        name: currentTier.name,
+        priceSOL: currentTier.priceSOL,
+        maxSupply: currentTier.maxSupply,
+        minted: tierMintedCount,
+        remaining: Math.max(0, currentTier.maxSupply - tierMintedCount),
+        startDate: currentTier.startDate,
+        endDate: currentTier.endDate,
+        startTime: new Date(currentTier.startDate * 1000).toISOString(),
+        endTime: new Date(currentTier.endDate * 1000).toISOString(),
+        isSoldOut: isSoldOut,
+        status: isSoldOut ? 'sold_out' : 'active',
+        timeRemaining: currentTier.endDate - currentTime
+      },
+      serverTime: {
+        unix: currentTime,
+        iso: new Date(currentTime * 1000).toISOString()
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      serverTime: {
+        unix: Math.floor(Date.now() / 1000),
+        iso: new Date().toISOString()
+      }
+    });
+  }
+});
 //--------------------------- verify cNFT Collection ---------------------------------//
 
 
