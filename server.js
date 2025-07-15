@@ -67,7 +67,7 @@ PRICING_TIERS = [
     name: "Space Voyager NFTs",
     startDate: new Date('2025-07-16T16:00:00Z').getTime() / 1000,
     endDate: new Date('2025-07-17T15:55:00Z').getTime() / 1000,
-    maxSupply: 10000,
+    maxSupply: 1000,
     priceSOL: 1,
     priceLamports: 1 * LAMPORTS_PER_SOL
   },
