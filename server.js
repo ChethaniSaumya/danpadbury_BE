@@ -57,32 +57,32 @@ const MAX_SUPPLY = 2500;
 PRICING_TIERS = [
   {
     name: "Space Cadet NFTs",
-    startDate: new Date('2025-07-15T15:55:00Z').getTime() / 1000,
-    endDate: new Date('2025-07-16T15:55:00Z').getTime() / 1000,
+    startDate: new Date('2025-07-16T15:55:00Z').getTime() / 1000,
+    endDate: new Date('2025-07-17T15:55:00Z').getTime() / 1000,
     maxSupply: 1000,
     priceSOL: 0.5,
     priceLamports: 0.5 * LAMPORTS_PER_SOL
   },
   {
     name: "Space Voyager NFTs",
-    startDate: new Date('2025-07-16T16:00:00Z').getTime() / 1000,
-    endDate: new Date('2025-07-17T15:55:00Z').getTime() / 1000,
+    startDate: new Date('2025-07-17T16:00:00Z').getTime() / 1000,
+    endDate: new Date('2025-07-18T15:55:00Z').getTime() / 1000,
     maxSupply: 1000,
     priceSOL: 1,
     priceLamports: 1 * LAMPORTS_PER_SOL
   },
   {
     name: "Space Explorer NFTs",
-    startDate: new Date('2025-07-17T16:00:00Z').getTime() / 1000,
-    endDate: new Date('2025-07-18T15:55:00Z').getTime() / 1000,
+    startDate: new Date('2025-07-18T16:00:00Z').getTime() / 1000,
+    endDate: new Date('2025-07-19T15:55:00Z').getTime() / 1000,
     maxSupply: 400,
     priceSOL: 5,
     priceLamports: 5 * LAMPORTS_PER_SOL
   },
   {
     name: "Space Pioneer NFTs",
-    startDate: new Date('2025-07-18T16:00:00Z').getTime() / 1000,
-    endDate: new Date('2025-07-19T16:00:00Z').getTime() / 1000,
+    startDate: new Date('2025-07-19T16:00:00Z').getTime() / 1000,
+    endDate: new Date('2025-07-20T16:00:00Z').getTime() / 1000,
     maxSupply: 100,
     priceSOL: 10,
     priceLamports: 10 * LAMPORTS_PER_SOL
