@@ -57,7 +57,7 @@ const MAX_SUPPLY = 2500;
 PRICING_TIERS = [
   {
     name: "Space Cadet NFTs",
-    startDate: new Date('2025-07-16T15:55:00Z').getTime() / 1000,
+    startDate: new Date('2025-07-15T15:55:00Z').getTime() / 1000,
     endDate: new Date('2025-07-17T15:55:00Z').getTime() / 1000,
     maxSupply: 1000,
     priceSOL: 0.5,
