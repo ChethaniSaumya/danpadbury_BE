@@ -51,7 +51,7 @@ const collectionMint = UMIPublicKey(process.env.TOKEN_ADDRESS);
 const AUTHORIZED_WALLET = process.env.AIRDROP_ADMIN_WALLET;
 const WHITELIST_END_TIME = 1762513111;
 
-const MAX_SUPPLY = 2500;
+const MAX_SUPPLY = 1000;
 
 // Add this after line 34 (after WHITELIST_END_TIME)
 /*PRICING_TIERS = [
