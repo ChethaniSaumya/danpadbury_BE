@@ -91,9 +91,9 @@ const MAX_SUPPLY = 2500;
 
 // 2. Add these constants after commenting out PRICING_TIERS
 const CURRENT_TIER = {
-  name: "Space Cadet NFTs",
-  priceSOL: 0.5,
-  priceLamports: 0.5 * LAMPORTS_PER_SOL,
+  name: "Space Voyager NFTs",
+  priceSOL: 1,
+  priceLamports: 1 * LAMPORTS_PER_SOL,
   maxSupply: MAX_SUPPLY // Use the existing MAX_SUPPLY (2500)
 }
 
