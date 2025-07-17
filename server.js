@@ -54,7 +54,7 @@ const WHITELIST_END_TIME = 1762513111;
 const MAX_SUPPLY = 2500;
 
 // Add this after line 34 (after WHITELIST_END_TIME)
-PRICING_TIERS = [
+/*PRICING_TIERS = [
   {
     name: "Space Cadet NFTs",
     startDate: new Date('2025-07-15T15:55:00Z').getTime() / 1000,
@@ -87,7 +87,15 @@ PRICING_TIERS = [
     priceSOL: 10,
     priceLamports: 10 * LAMPORTS_PER_SOL
   }
-];
+];*/
+
+// 2. Add these constants after commenting out PRICING_TIERS
+const CURRENT_TIER = {
+  name: "Space Cadet NFTs",
+  priceSOL: 0.5,
+  priceLamports: 0.5 * LAMPORTS_PER_SOL,
+  maxSupply: MAX_SUPPLY // Use the existing MAX_SUPPLY (2500)
+}
 
 // Store connected SSE clients
 const clients = [];
@@ -195,20 +203,7 @@ async function getCurrentMintCount() {
 }
 
 function getCurrentTier() {
-  const currentTime = Math.floor(Date.now() / 1000);
-
-  for (const tier of PRICING_TIERS) {
-
-    console.log("Tier Name :" + tier.name);
-    console.log("Tier Start Time :" + tier.startDate);
-    console.log("Tier End Time :" + tier.endDate);
-
-    if (currentTime >= tier.startDate && currentTime < tier.endDate) {
-      return tier;
-    }
-  }
-
-  return null; // No active tier
+  return CURRENT_TIER;
 }
 
 async function getTierMintedCount(tierName) {
@@ -403,18 +398,18 @@ app.post('/api/mint', async (req, res) => {
     const amount = await getTransactionAmount(paymentSignature);
     console.log(`Payment amount: ${amount} SOL`);
 
-    if ((amount * LAMPORTS_PER_SOL) != currentTier.priceLamports) {
+    if ((amount * LAMPORTS_PER_SOL) != CURRENT_TIER.priceLamports) {
       return res.status(409).json({
         success: false,
         error: {
           code: 'INSUFFICIENT_PAYMENT',
-          message: 'Payment amount does not match required price for current tier',
-          expected: currentTier.priceSOL,
+          message: 'Payment amount does not match required price',
+          expected: CURRENT_TIER.priceSOL,
           received: amount,
-          currentTier: currentTier.name,
+          tierName: CURRENT_TIER.name,
           txid: paymentSignature,
           timestamp: new Date().toISOString(),
-          resolution: 'Send the correct amount and try again'
+          resolution: 'Send the correct amount (0.5 SOL) and try again'
         }
       });
     }
@@ -1081,25 +1076,6 @@ app.get('/api/debug/time-check', (req, res) => {
   const currentTime = Math.floor(Date.now() / 1000);
   const currentTier = getCurrentTier();
   
-  // Get detailed info about all tiers
-  const tierDetails = PRICING_TIERS.map(tier => {
-    const isActive = currentTime >= tier.startDate && currentTime < tier.endDate;
-    const timeUntilStart = tier.startDate - currentTime;
-    const timeUntilEnd = tier.endDate - currentTime;
-    
-    return {
-      name: tier.name,
-      startDate: tier.startDate,
-      endDate: tier.endDate,
-      startDateISO: new Date(tier.startDate * 1000).toISOString(),
-      endDateISO: new Date(tier.endDate * 1000).toISOString(),
-      isActive,
-      timeUntilStart: timeUntilStart > 0 ? timeUntilStart : null,
-      timeUntilEnd: timeUntilEnd > 0 ? timeUntilEnd : null,
-      status: isActive ? 'ACTIVE' : (timeUntilStart > 0 ? 'UPCOMING' : 'ENDED')
-    };
-  });
-  
   res.json({
     success: true,
     serverTime: {
@@ -1108,11 +1084,15 @@ app.get('/api/debug/time-check', (req, res) => {
       utc: new Date().toUTCString(),
       local: new Date().toString()
     },
-    activeTier: currentTier ? currentTier.name : null,
-    allTiers: tierDetails,
-    nextTier: tierDetails.find(t => t.timeUntilStart > 0),
+    activeTier: currentTier.name,
+    tierDetails: {
+      name: currentTier.name,
+      priceSOL: currentTier.priceSOL,
+      maxSupply: currentTier.maxSupply,
+      status: 'ACTIVE'
+    },
     debug: {
-      message: "Compare your device time with serverTime.iso",
+      message: "Single tier mode - Space Cadet NFTs at 0.5 SOL",
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     }
   });
@@ -1130,34 +1110,6 @@ app.get('/api/current-tier', async (req, res) => {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
-    if (!currentTier) {
-      // Find the next upcoming tier
-      const nextTier = PRICING_TIERS.find(tier => tier.startDate > currentTime);
-      
-      return res.json({
-        success: true,
-        activeTier: null,
-        message: 'No active tier currently',
-        serverTime: {
-          unix: currentTime,
-          iso: new Date(currentTime * 1000).toISOString()
-        },
-        nextTier: nextTier ? {
-          name: nextTier.name,
-          startsIn: nextTier.startDate - currentTime,
-          startTime: new Date(nextTier.startDate * 1000).toISOString()
-        } : null,
-        debug: {
-          allTiersStatus: PRICING_TIERS.map(tier => ({
-            name: tier.name,
-            active: currentTime >= tier.startDate && currentTime < tier.endDate,
-            startTime: new Date(tier.startDate * 1000).toISOString(),
-            endTime: new Date(tier.endDate * 1000).toISOString()
-          }))
-        }
-      });
-    }
-
     const tierMintedCount = await getTierMintedCount(currentTier.name);
     const isSoldOut = tierMintedCount >= currentTier.maxSupply;
 
@@ -1169,13 +1121,8 @@ app.get('/api/current-tier', async (req, res) => {
         maxSupply: currentTier.maxSupply,
         minted: tierMintedCount,
         remaining: Math.max(0, currentTier.maxSupply - tierMintedCount),
-        startDate: currentTier.startDate,
-        endDate: currentTier.endDate,
-        startTime: new Date(currentTier.startDate * 1000).toISOString(),
-        endTime: new Date(currentTier.endDate * 1000).toISOString(),
         isSoldOut: isSoldOut,
-        status: isSoldOut ? 'sold_out' : 'active',
-        timeRemaining: currentTier.endDate - currentTime
+        status: isSoldOut ? 'sold_out' : 'active'
       },
       serverTime: {
         unix: currentTime,
@@ -1193,6 +1140,7 @@ app.get('/api/current-tier', async (req, res) => {
     });
   }
 });
+
 //--------------------------- verify cNFT Collection ---------------------------------//
 
 
