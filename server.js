@@ -51,7 +51,7 @@ const collectionMint = UMIPublicKey(process.env.TOKEN_ADDRESS);
 const AUTHORIZED_WALLET = process.env.AIRDROP_ADMIN_WALLET;
 const WHITELIST_END_TIME = 1762513111;
 
-const MAX_SUPPLY = 1000;
+const MAX_SUPPLY = 400;
 
 // Add this after line 34 (after WHITELIST_END_TIME)
 /*PRICING_TIERS = [
@@ -91,9 +91,9 @@ const MAX_SUPPLY = 1000;
 
 // 2. Add these constants after commenting out PRICING_TIERS
 const CURRENT_TIER = {
-  name: "Space Voyager NFTs",
-  priceSOL: 1,
-  priceLamports: 1 * LAMPORTS_PER_SOL,
+  name: "Space Explorer NFTs",
+  priceSOL: 5,
+  priceLamports: 5 * LAMPORTS_PER_SOL,
   maxSupply: MAX_SUPPLY // Use the existing MAX_SUPPLY (2500)
 }
 
